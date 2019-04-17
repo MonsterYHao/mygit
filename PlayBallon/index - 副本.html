@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style type="text/css">
+		#box{
+			width: 480px;
+			height: 640px;
+			margin:0 auto;
+			/*border: 1px solid red;*/
+		}
+	</style>
+</head>
+<body>
+	<div id="box">
+		<canvas id="canvas" width="480" height="640"></canvas>
+	</div>
+	<audio id="music" src="img/群星 - FC《坦克大战》战前BGM.mp3"  controls="" autoplay="autoplay"></audio>
+	<audio id="bgm" src="img/百石元 - 猪突猛進.mp3" controls="" autoplay="false"></audio>
+</body>
+</html>
+<script type="text/javascript">
+	var music = document.getElementById("music");
+	var canvas = document.getElementById('canvas');
+	var ctx = canvas.getContext("2d");
+
+	var START = 0;
+	var STARTING = 1;
+	var RUNING = 2;
+	var PAUSE = 3;
+	var GAME_OVER = 4;
+	var WIDTH = 480;
+	var HEIGHT = 640;
+
+	var score = 0;
+	var time = 20;
+
+	var state = START;
+    
+    //图片数据
+	var bg = new Image();
+	bg.src = "img/bg.png";
+
+	var pause = new Image();
+	pause.src = "img/game_pause_nor.png";
+
+	var y = new Image();
+	y.src = "img/yellow.png";
+
+	var b = new Image();
+	b.src = "img/blue.png";
+
+	var r = new Image();
+	r.src = "img/red.png";
+
+	//数据对象
+	var BACKGROUND = {
+		img : bg,
+		width : 480,
+		height : 640,
+		speed : 20
+	}
+	var YELLOW = {
+		type : 1,
+		score : 1,
+		life : 1,
+		img : y,
+		width : 100,
+		height : 135,
+		minspeed : 50,
+		maxspeed : 100
+	}
+	var BLUE = {
+		type : 2,
+		score : 2,
+		life : 2,
+		img : b,
+		width : 100,
+		height : 106,
+		minspeed : 50,
+		maxspeed : 100
+	}
+	var RED = {
+		type : 3,
+		score : 3,
+		life : 3,
+		img : r,
+		width : 100,
+		height : 240,
+		minspeed : 50,
+		maxspeed : 100
+	}
+
+	// var src =[];
+	// src[0] = "img/群星 - FC《坦克大战》战前BGM.mp3";
+	// src[1] = "img/百石元 - 猪突猛進.mp3";
+	//切换游戏状态
+	canvas.onclick = function(){
+		if (state == START) {
+			state = STARTING;
+			musics();
+		}
+	}
+	canvas.onmouseout = function(e){
+		if(state == STARTING){
+			state = PAUSE;
+		}
+	}
+	canvas.onmouseover = function(e){
+		if(state == PAUSE){
+			state = STARTING;
+		}
+	}
+
+	function musics(){
+		music.play();
+	}
+	function bgms(){
+		bgm.play();
+	}
+
+	
+
+
+	//业务对象
+	function Background(config){
+		this.img = config.img;
+		this.height = config.height;
+		this.y1 = 0;
+		this.y2 = -this.height;
+		this.lastTime = 0;
+		this.speed = 1000 / config.speed;
+		this.paint = function(){
+			ctx.drawImage(this.img,0,this.y1);
+			ctx.drawImage(this.img,0,this.y2);
+		}
+		this.run = function(){
+			var currentTime = new Date().getTime();
+			if (currentTime - this.lastTime >= this.speed) {
+				this.y1 ++;
+				this.y2 ++;
+				if (this.y1 >= this.height) {
+					this.y1 = -this.height;
+				}
+				if (this.y2 >= this.height) {
+					this.y2 = -this.height;
+				}
+				this.lastTime = new Date().getTime();
+			}
+		}
+	}
+
+	//气球颜色随机
+	var lastTime = new Date().getTime();
+	var interval = 200;
+	function randomBall(){
+		var currentTime = new Date().getTime();
+		if (currentTime - lastTime >= interval) {
+			var n = Math.floor(Math.random()*10);
+			if (n >= 0 && n <=4) {
+				ballons[ballons.length] = new Ballon(YELLOW);
+			}else if (n >= 5 && n <=7) {
+				ballons[ballons.length] = new Ballon(BLUE);
+			}else if(n >= 8 && n <=10){
+				ballons[ballons.length] = new Ballon(RED);
+			}
+			lastTime = new Date().getTime();
+		}
+	}
+
+	//气球
+	var Ballon = function(config){
+		this.img = config.img;
+		this.width = config.width;
+		this.height = config.height;
+		this.lastTime = 0;
+		this.x = Math.floor(Math.random()*(WIDTH-config.width));
+		this.y = HEIGHT*4/3;
+		this.score = config.score;
+		this.life = config.life;
+		this.down = false;
+		// this.canDelete = false;
+		this.speed = 1000/(Math.random()*(config.maxSpeed-config.minSpeed)+config.minSpeed);
+
+		// this.step = function(){
+		// 	if (this.down) {
+		// 		this.canDelete = true;
+		// 	}
+		// }
+
+		this.move = function(){
+			this.y--;
+		}
+		this.paint = function(){
+			ctx.drawImage(this.img,this.x,this.y);
+		}
+		this.outBounds = function(){
+			return this.y < -200;
+		}
+		this.hit = function(x,y){
+			var centX = x;
+			var centY = y;
+			var leftX = this.x + 10;
+			var rightX = this.x + this.width - 10;
+			var topY = this.y;
+			var bottomY = this.y + this.height -30;
+			var result = centX > leftX && centX < rightX && centY > topY && centY < bottomY;
+			return result;
+		}
+		this.duang = function(){
+			this.life --;
+			if (this.life == 0) {
+				this.down = true;
+				score += this.score;
+			}
+		}
+		
+	}
+	//实例化对象
+	var background = new Background(BACKGROUND);
+	var ballons = [];
+
+	//数组气球移动
+	function setComponentMove(){
+		for(var i = 0; i < ballons.length; i ++){
+			ballons[i].move();
+		}
+
+
+	}
+	//绘制
+	function setComponentPaint(){
+		for(var i = 0; i < ballons.length; i ++){
+			ballons[i].paint()
+		}
+		ctx.beginPath();
+		ctx.font = "bold 36px 宋体";
+		ctx.fillText("score:"+score,10,30);
+		ctx.fillText("time:"+time,350,30);
+		ctx.closePath();
+	}
+	//删除多出的气球
+	function deleteComponent(){
+		for(var i = 0; i < ballons.length; i++){
+			if (ballons[i].outBounds() || ballons[i].down) {
+				ballons.splice(i,1);
+			}
+		}
+	}
+    //打气球
+	canvas.addEventListener("click",ball_onclick,false);
+	function ball_onclick(event){
+		var event = window.event || event;
+		var x = event.offsetX;
+		var y = event.offsetY;
+		for(var i = 0; i < ballons.length; i++){
+			var ballsum = ballons[i];
+			if (ballsum.down || ballsum.canDelete) {
+				continue;
+			}
+			if (ballsum.hit(x,y)) {
+				ballsum.duang();
+			}
+		}
+		bgms();
+
+	}
+	//定时器刷新状态
+	setInterval(function(){
+
+		switch (state) {
+			case START:
+				background.paint();
+				background.run();
+				ctx.beginPath();
+				ctx.font = "50px 宋体";
+				ctx.fillText("开始游戏",150,330);
+				ctx.closePath();
+				break;
+			case STARTING:
+			    background.paint();
+				background.run();
+				randomBall();
+				setComponentPaint();
+				setComponentMove();
+				deleteComponent();
+				back();
+			    break;
+			case RUNING:
+
+			    break;
+			case PAUSE:
+			    var	x = (WIDTH-pause.naturalWidth) / 2;
+				var	y = (HEIGHT-pause.naturalHeight) / 2;
+				ctx.drawImage(pause,x,y);
+				
+			    break;
+			case GAME_OVER:
+			    ctx.beginPath();
+				ctx.font = "50px 宋体";
+				ctx.fillText("GAME_OVER",147,330);
+				ctx.fillText("最终得分：" + score,125,390);
+				ctx.closePath();
+			    break;
+			default:
+				// statements_def
+				break;
+		}
+	},1000 / 100);
+
+    var lastTimes = 0;
+    function back(){	
+    	var currentTime = new Date().getTime();
+    	if (currentTime - lastTimes >= 1000) {	
+			time--;
+			if (time == -1) {
+				state = GAME_OVER;
+			}
+    		lastTimes = new Date().getTime();
+    	}
+    	
+    }
+	
+</script>
