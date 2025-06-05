@@ -1,0 +1,69 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>蝴蝶动画</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB, #E0F7FA);
+            height: 100vh;
+        }
+        
+        .butterfly {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50,20 C60,10 80,10 90,20 C100,30 100,50 90,60 C80,70 60,70 50,60 C40,70 20,70 10,60 C0,50 0,30 10,20 C20,10 40,10 50,20 Z" fill="pink"/><path d="M50,20 C60,30 60,50 50,60 C40,50 40,30 50,20 Z" fill="hotpink"/></svg>') no-repeat;
+            animation: fly 15s linear infinite;
+            transform-origin: center;
+        }
+
+        @keyframes fly {
+            0% {
+                left: -100px;
+                top: 20%;
+                transform: rotate(0deg) scale(0.8);
+            }
+            25% {
+                top: 40%;
+                transform: rotate(20deg) scale(1);
+            }
+            50% {
+                top: 30%;
+                transform: rotate(-10deg) scale(0.9);
+            }
+            75% {
+                top: 50%;
+                transform: rotate(15deg) scale(1.1);
+            }
+            100% {
+                left: 100%;
+                top: 10%;
+                transform: rotate(0deg) scale(0.8);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="butterfly"></div>
+    
+    <script>
+        function createButterflies() {
+            for(let i=0; i<5; i++) {
+                const butterfly = document.createElement('div');
+                butterfly.className = 'butterfly';
+                butterfly.style.left = Math.random() * window.innerWidth + 'px';
+                butterfly.style.top = Math.random() * window.innerHeight + 'px';
+                butterfly.style.animationDuration = (10 + Math.random() * 10) + 's';
+                butterfly.style.animationDelay = (Math.random() * 5) + 's';
+                document.body.appendChild(butterfly);
+            }
+        }
+        
+        window.onload = createButterflies;
+    </script>
+</body>
+</html>
